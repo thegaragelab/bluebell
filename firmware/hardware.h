@@ -91,16 +91,13 @@
 #define SPWM_COUNT 3
 
 /** Pin associated with SPWM0 */
-#define SPWM_PIN0 PINB0
+#define SPWM_PIN0 PINB2
 
 /** Pin associated with SPWM1 */
 #define SPWM_PIN1 PINB1
 
 /** Pin associated with SPWM2 */
-#define SPWM_PIN2 PINB2
-
-/** Pin associated with SPWM3 */
-#define SPWM_PIN3 PINB3
+#define SPWM_PIN2 PINB0
 
 //---------------------------------------------------------------------------
 // Nokia LCD device support
