@@ -74,15 +74,35 @@ static void ledUpdate() {
 //---------------------------------------------------------------------------
 
 //! Maximum command size
-#define MAX_COMMAND_SIZE 10
+#define MAX_COMMAND_SIZE 6
 
 //! Input buffer
 static uint8_t g_buffer[MAX_COMMAND_SIZE];
 
+//! Input index
+static uint8_t g_index = 0;
+
 /** Check for a command and process it.
  */
 static void cmdProcess() {
-  // TODO: Implement this
+  while(uartAvail()) {
+    g_buffer[g_index] = uartRecv();
+    if(!((g_index==0)&&(g_buffer[0]!='!'))) {
+      g_index++;
+      if(g_buffer[g_index-1]=='\n') {
+        if(g_index==MAX_COMMAND_SIZE) {
+          // Copy in data
+          g_state[STATE_RED] = g_buffer[1];
+          g_state[STATE_GREEN] = g_buffer[2];
+          g_state[STATE_BLUE] = g_buffer[3];
+          g_state[STATE_TIMER] = g_buffer[4];
+          }
+        g_index = 0;
+        }
+      else if(g_index>=MAX_COMMAND_SIZE)
+        g_index = 0; // Too much data
+      }
+    }
   }
 
 //---------------------------------------------------------------------------
@@ -94,6 +114,7 @@ static void cmdProcess() {
 void main() {
   uartInit();
   spwmInit();
+//  adcInit(ADC0);
   sei();
   // Initialise state
   uint16_t last;
