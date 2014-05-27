@@ -10,6 +10,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include "softuart.h"
+#include "systicks.h"
 #include "iohelp.h"
 #include "utility.h"
 
@@ -17,53 +18,71 @@
 void main() __attribute__ ((noreturn));
 
 //---------------------------------------------------------------------------
-// LED control
+// Device state
 //---------------------------------------------------------------------------
 
-static uint8_t g_red = 0;
-static uint8_t g_grn = 0;
-static uint8_t g_blu = 0;
-
-/** Set the target values for the LED's
+/** State information maintained by the device
  *
- * @param red target for red LED
- * @param grn target for green LED
- * @param blu target for blue LED
+ * This includes the current color values for each of the LED's as well as
+ * the current value of the fade out timer.
  */
-static void ledSet(uint8_t red, uint8_t grn, uint8_t blu) {
-  g_red = red;
-  g_grn = grn;
-  g_blu = blu;
-  }
+typedef enum _STATE {
+  STATE_RED = 0, //!< Index of red LED intensity
+  STATE_GREEN,   //!< Index of green LED intensity
+  STATE_BLUE,    //!< Index of blue LED intensity
+  STATE_TIMER,   //!< Current count down timer
+
+  STATE_MAX      //!< Maximum state index
+  } STATE;
+
+/** This array holds the current device state
+ */
+static uint8_t g_state[STATE_MAX];
+
+//---------------------------------------------------------------------------
+// LED control
+//---------------------------------------------------------------------------
 
 /** Update the current PWM values to bring them closer to the target
  */
 static void ledUpdate() {
   // Update RED value
   uint8_t val = spwmValue(SPWM0);
-  if(val<g_red)
+  if(val<g_state[STATE_RED])
     val++;
-  else if(val>g_red)
+  else if(val>g_state[STATE_RED])
     val--;
   spwmOut(SPWM0, val);
   // Update GREEN value
   val = spwmValue(SPWM1);
-  if(val<g_grn)
+  if(val<g_state[STATE_GREEN])
     val++;
-  else if(val>g_grn)
+  else if(val>g_state[STATE_GREEN])
     val--;
   spwmOut(SPWM1, val);
   // Update BLUE value
   val = spwmValue(SPWM2);
-  if(val<g_blu)
+  if(val<g_state[STATE_BLUE])
     val++;
-  else if(val>g_blu)
+  else if(val>g_state[STATE_BLUE])
     val--;
   spwmOut(SPWM2, val);
   }
 
-static bool ledMatch() {
-  return ((spwmValue(SPWM0)==g_red)&&(spwmValue(SPWM1)==g_grn)&&(spwmValue(SPWM2)==g_blu));
+//---------------------------------------------------------------------------
+// Protocol implementation
+//---------------------------------------------------------------------------
+
+//! Maximum command size
+#define MAX_COMMAND_SIZE 10
+
+//! Input buffer
+static uint8_t g_buffer[MAX_COMMAND_SIZE];
+
+/** Check for a command and process it.
+ */
+static void cmdProcess() {
+  // TODO: Implement this
   }
 
 //---------------------------------------------------------------------------
@@ -73,19 +92,31 @@ static bool ledMatch() {
 /** Program entry point
  */
 void main() {
+  uartInit();
   spwmInit();
   sei();
-  // Set up output values
-  uint32_t output = 0x00FF0000L;
-  ledSet((output>>16)&0xFF, (output>>8)&0xFF, output&0xFF);
+  // Initialise state
+  uint16_t last;
+  for(last=0; last<STATE_MAX; last++)
+    g_state[last] = 0;
+  last = ticks();
+  // Main loop
   while(true) {
-    if(ledMatch()) {
-      output = output >> 8;
-      if(output==0)
-        output = 0x00FF0000L;
-      ledSet((output>>16)&0xFF, (output>>8)&0xFF, output&0xFF);
+    // Check for incoming commands
+    cmdProcess();
+    // Update the timer
+    if(ticksElapsed(last)>=TICKS_PER_SECOND) {
+      if(g_state[STATE_TIMER]!=0)
+        g_state[STATE_TIMER]--;
+      else {
+        g_state[STATE_RED] = 0;
+        g_state[STATE_GREEN] = 0;
+        g_state[STATE_BLUE] = 0;
+        }
       }
+    // Update LED state
     ledUpdate();
-    wait(10);
+    // Wait for a while
+    wait(100);
     }
   }
