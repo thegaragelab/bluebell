@@ -55,7 +55,7 @@
 
 /** Define the pin to use for transmission
  */
-#define UART_TX   PINB5
+#define UART_TX   PINB3
 
 /** Define the pin to use for receiving
  *

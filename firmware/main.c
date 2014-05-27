@@ -88,19 +88,27 @@ static void cmdProcess() {
   while(uartAvail()) {
     g_buffer[g_index] = uartRecv();
     if(!((g_index==0)&&(g_buffer[0]!='!'))) {
+      g_state[STATE_TIMER] = 0x0a;
       g_index++;
       if(g_buffer[g_index-1]=='\n') {
+        g_state[STATE_GREEN] = 0xff;
         if(g_index==MAX_COMMAND_SIZE) {
+          g_state[STATE_BLUE] = 0xff;
+
           // Copy in data
+/*
           g_state[STATE_RED] = g_buffer[1];
           g_state[STATE_GREEN] = g_buffer[2];
           g_state[STATE_BLUE] = g_buffer[3];
           g_state[STATE_TIMER] = g_buffer[4];
+*/
           }
         g_index = 0;
         }
-      else if(g_index>=MAX_COMMAND_SIZE)
+      else if(g_index>=MAX_COMMAND_SIZE) {
         g_index = 0; // Too much data
+        g_state[STATE_RED] = 0xff;
+        }
       }
     }
   }
@@ -119,7 +127,8 @@ void main() {
   // Initialise state
   uint16_t last;
   for(last=0; last<STATE_MAX; last++)
-    g_state[last] = 0;
+    g_state[last] = 255;
+  g_state[STATE_TIMER] = 10;
   last = ticks();
   // Main loop
   while(true) {
@@ -134,6 +143,7 @@ void main() {
         g_state[STATE_GREEN] = 0;
         g_state[STATE_BLUE] = 0;
         }
+      last = ticks();
       }
     // Update LED state
     ledUpdate();
