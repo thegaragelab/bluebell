@@ -88,27 +88,21 @@ static void cmdProcess() {
   while(uartAvail()) {
     g_buffer[g_index] = uartRecv();
     if(!((g_index==0)&&(g_buffer[0]!='!'))) {
-      g_state[STATE_TIMER] = 0x0a;
       g_index++;
       if(g_buffer[g_index-1]=='\n') {
         g_state[STATE_GREEN] = 0xff;
         if(g_index==MAX_COMMAND_SIZE) {
-          g_state[STATE_BLUE] = 0xff;
-
           // Copy in data
-/*
           g_state[STATE_RED] = g_buffer[1];
           g_state[STATE_GREEN] = g_buffer[2];
           g_state[STATE_BLUE] = g_buffer[3];
           g_state[STATE_TIMER] = g_buffer[4];
-*/
+          // Reset buffer
+          g_index = 0;
           }
-        g_index = 0;
         }
-      else if(g_index>=MAX_COMMAND_SIZE) {
+      else if(g_index>=MAX_COMMAND_SIZE)
         g_index = 0; // Too much data
-        g_state[STATE_RED] = 0xff;
-        }
       }
     }
   }
