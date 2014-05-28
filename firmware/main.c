@@ -96,8 +96,9 @@ static void cmdProcess() {
           g_state[STATE_GREEN] = g_buffer[2];
           g_state[STATE_BLUE] = g_buffer[3];
           g_state[STATE_TIMER] = g_buffer[4];
+          // Reset buffer
+          g_index = 0;
           }
-        g_index = 0;
         }
       else if(g_index>=MAX_COMMAND_SIZE)
         g_index = 0; // Too much data
