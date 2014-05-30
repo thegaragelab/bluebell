@@ -90,7 +90,6 @@ static void cmdProcess() {
     if(!((g_index==0)&&(g_buffer[0]!='!'))) {
       g_index++;
       if(g_buffer[g_index-1]=='\n') {
-        g_state[STATE_GREEN] = 0xff;
         if(g_index==MAX_COMMAND_SIZE) {
           // Copy in data
           g_state[STATE_RED] = g_buffer[1];
@@ -99,15 +98,19 @@ static void cmdProcess() {
           g_state[STATE_TIMER] = g_buffer[4];
           // Reset buffer
           g_index = 0;
+          // Acknowledge command
+          uartPrintP(PSTR("+\n"));
           }
         }
-      else if(g_index>=MAX_COMMAND_SIZE) {
+      if(g_index>=MAX_COMMAND_SIZE) {
         // Move forward to the next start character (if one is present)
         uint8_t index, start;
         for(start=1;(start<g_index)&&(g_buffer[start]!='!');start++);
         for(index=0;start<g_index;index++,start++)
           g_buffer[index] = g_buffer[start];
         g_index = index;
+        // Reject command
+        uartPrintP(PSTR("-\n"));
         }
       }
     }
@@ -148,6 +151,6 @@ void main() {
     // Update LED state
     ledUpdate();
     // Wait for a while
-    wait(100);
+    wait(10);
     }
   }
