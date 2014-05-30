@@ -101,8 +101,14 @@ static void cmdProcess() {
           g_index = 0;
           }
         }
-      else if(g_index>=MAX_COMMAND_SIZE)
-        g_index = 0; // Too much data
+      else if(g_index>=MAX_COMMAND_SIZE) {
+        // Move forward to the next start character (if one is present)
+        uint8_t index, start;
+        for(start=1;(start<g_index)&&(g_buffer[start]!='!');start++);
+        for(index=0;start<g_index;index++,start++)
+          g_buffer[index] = g_buffer[start];
+        g_index = index;
+        }
       }
     }
   }
