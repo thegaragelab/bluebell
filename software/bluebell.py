@@ -4,6 +4,7 @@
 #
 # Simple wrapper to control the Bluebell device over Bluetooth.
 #----------------------------------------------------------------------------
+from time import sleep
 try:
   from serial import Serial
 except:
@@ -53,23 +54,20 @@ class Bluebell:
     """
     # Set up the serial port
     port = None
-#    try:
-    port = Serial(self._port, baudrate = 57600, timeout = 0.2)
-#    except:
-#      return False
+    try:
+      port = Serial(self._port, baudrate = 57600, timeout = 0.2)
+    except:
+      return False
     # Write the data
-    data = (
-      ord('!'),
+    data = "!%c%c%c%c\n" % (
       trimValue(red),
       trimValue(green),
       trimValue(blue),
-      trimValue(time),
-      ord('\n')
+      trimValue(time)
       )
-    print data
-    port.write(data)
-    print port.read()
+    for ch in data:
+      port.write(ch)
+      sleep(0.01)
     # All done
     port.close()
     return True
-
